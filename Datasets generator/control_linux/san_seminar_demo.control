@@ -1,0 +1,37 @@
+actions {
+  living_light_on {
+    0  couch_empty
+    0  tv_light_off
+    0  living_light_off
+  }
+ 
+  living_light_off {
+    0 couch_lying
+    0 tv_light_on
+    0 living_light_on
+  }
+ 
+  couch_light_on {
+    0 couch_noisy
+    0 tv_noisy
+    0 living_light_off
+  }
+
+  couch_light_off {
+    0 couch_sitting
+    0 tv_light_on
+    0 living_light_off
+  }
+
+  tv_light_on {
+    0 couch_sitting
+    0 tv_noisy
+    0 living_light_on
+  }
+  
+  tv_light_off {
+    0 couch_lying
+    0 tv_light_on
+    0 living_light_off
+  }
+}

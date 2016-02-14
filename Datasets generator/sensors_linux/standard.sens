@@ -1,0 +1,102 @@
+#
+# Constant value generator.
+#
+# Required sensor settings:
+#   value number: the constant value which will be generated
+#
+# Optional sensor settings:
+#   continue 1 | 0: if 1 and the sensor has already a generated a value then
+#                   copy the last value
+#
+
+generator constant {
+  if {[info exists sensor(continue)] && $sensor(continue) && [llength $state(last)]} {
+    set x [lindex $state(last) 1]
+  } else {
+    set x $sensor(value)
+  }
+
+  return $x
+}
+
+#
+# Sine function generator.
+#
+# Required sensor settings:
+#   min number:
+#   max number: the sine wave will oscillate between the min and max values
+#   period number: the period of the sine wave (in milliseconds)
+#
+
+generator sine {
+  set x [expr (double($time)/$sensor(period))]
+  set x [expr ($x - floor($x))*2*$::pi]
+  set range [expr $sensor(max) - $sensor(min)]
+  return [expr ((sin($x) + 1)/2)*$range + $sensor(min)]
+}
+
+#
+# Superimpose several sine waves
+#
+# Required sensor settings:
+#   sines list: list of sine functions, where each function is specified by a tuple:
+#               { type string min number max number period number }
+#
+# Example:
+# {
+#      interval 100 noise 0
+#      type superimpose
+#      components { 
+#        { type sine min 0 max 100 period 5000 }
+#        { type sine min 0 max 100 period 3500 }
+#        { type sine min 0 max 100 period 2500 }
+#      }
+#    }
+#
+
+generator superimpose {
+  set out 0
+  foreach component $sensor(components) {
+    set out [expr $out + [value $component $time]]
+  }
+  return $out
+}
+
+#
+# Publish the current state
+#
+
+generator state {
+  return $state(state)
+}
+
+#
+# Linear function, y = ax + b
+#
+# Required sensor settings:
+#   a number: the slope
+#   b number: the intercept
+#
+# Optional sensor settings:
+#   reset 1 | 0: reset local time to 0 after state change
+#
+
+generator linear {
+  # initialize the local start time, i.e. the time offset marking x = 0
+  if {![info exists state(localStartTime)]} {
+    set state(localStartTime) $::startTime
+  }
+
+  # check if state changed
+  if {$state(prevState) ne $state(state)} {
+    if {[info exists sensor(reset)] && $sensor(reset)} {
+      set state(localStartTime) $time
+    }
+  }
+
+  # get the x
+  set x [expr $time - $state(localStartTime)]
+  set y [expr $sensor(a)*$x + $sensor(b)]
+
+  return $y
+}

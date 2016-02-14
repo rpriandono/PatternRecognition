@@ -1,0 +1,76 @@
+#
+# Sensors
+#
+
+sensors {
+  9000 {
+    paused { type state }
+    play_tv { type state }
+    play_tablet { type state }
+    rewind { type state }
+  }
+
+  7000 {
+    couch_empty { interval 100 noise 5 type constant value 0 }
+    couch_sitting { interval 100 noise 5 type constant value 40 }
+    couch_lying { interval 100 noise 5 type constant value 20 }
+    couch_light_off { interval 100 noise 5 type constant value 10 }
+    couch_light_on { interval 100 noise 10 type constant value 80 }	
+    couch_quiet {
+      interval 20 noise 0
+      type superimpose
+      components { 
+        { type sine min 0 max 50 period 5000 }
+        { type sine min 0 max 50 period 3000 }
+      }
+    }
+    couch_noisy {
+      interval 20 noise 0
+      type superimpose
+      components { 
+        { type sine min 0 max 50 period 1000 }
+        { type sine min 0 max 50 period 500 }
+        { type sine min 0 max 10 period 300 }
+      }
+    }
+  }
+
+  7001 {
+    tv_light_off { interval 100 noise 5 type constant value 0 }
+    tv_light_on { interval 100 noise 10 type constant value 100 }
+    tv_quiet {
+      interval 50 noise 2
+      type superimpose
+      components { 
+        { type sine min 0 max 50 period 10000 }
+        { type sine min 0 max 50 period 5000 }
+        { type sine min 0 max 50 period 2500 }
+      }
+    }
+    tv_noisy {
+      interval 50 noise 2
+      type superimpose
+      components { 
+        { type sine min 0 max 50 period 2000 }
+        { type sine min 0 max 50 period 1500 }
+        { type sine min 0 max 10 period 2500 }
+      }
+    }
+  }
+
+  7002 {
+    living_light_off { interval 100 noise 5 type constant value 0 }
+    living_light_on { interval 100 noise 10 type constant value 150 }
+  }
+}
+
+#
+# Events
+#
+
+
+#
+# Standard library
+#
+
+source standard.sens

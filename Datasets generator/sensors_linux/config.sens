@@ -1,0 +1,90 @@
+#
+# A sensor is specified by the port on which the sensor is listening for incoming
+# TCP socket connections, and a list of "state behavior" pairs which specify the
+# sensor behavior in the corresponding state.
+# For example, there is a sensor on port 8002 which will:
+#   - generate a constant signal with some noise around the value 0 in the "empty" state
+#   - generate a constant signal with some noise around the value 40 in the "occupied" state 
+# If a sensor specifies a behavior for state X, then the sensor will move to that state
+# whenever event X is generated. Otherwise, the sensor will ignore event X.
+#
+
+sensors {
+  8001 {
+    normal { interval 100 noise 0 type sawtooth min 20 max 90 period 3000 activity normal}
+  }
+  8002 {
+    empty { interval 100 noise 5 type constant value 0 }
+    occupied { interval 100 noise 5 type constant value 40 }
+  }
+  8003 {
+    normal { interval 100 noise 3 type sine min 0 max 100 period 5000 }
+    hot { interval 20 noise 5 events {2000 warm} type constant value 20 }
+    warm { interval 20 noise 2 events {1000 normal} type constant value 10 }
+  }
+  8004 {
+    normal {
+      interval 100 noise 0
+      type superimpose
+      components { 
+        { type sine min 0 max 100 period 5000 }
+        { type sine min 0 max 100 period 3500 }
+        { type sine min 0 max 100 period 2500 }
+      }
+    }
+  }
+}
+
+#
+# A scenario specifies when which events are generated. It is a list of pairs "delay event",
+# where the delays are expressed in milliseconds relative to the start of the application.
+# For example, "2000 Y" means that event "Y" is triggered 2000 ms after the prevous event,
+# with the first event being delayed relative to the start of the application.
+# The scenario is cyclic, i.e. after reaching the end it starts from the beginning.
+#
+
+events {
+  10000 occupied
+  12000 hot
+  15000 empty
+}
+
+# 
+# The 'type' parameter in the sensor specification specifies which generator will
+# generate data in the given state. E.g. the sawtooth generator below will create a sawtooth
+# wave function.
+#
+# A generator has a name and a body. The name of the generator provides an option for
+# the 'type' parameter in sensor specifications.
+#
+# The generator body is a Tcl script and must return a sensor measurement. The following
+# variables are available in the body:
+#
+#   time: the time of the measurement, in milliseconds since the start of the server
+#   sensor: array containing the generator parameters, as provided in the sensor specification
+#
+
+#
+# Sawtooth function generator.
+#
+# Required sensor settings:
+#   min number:
+#   max number: the sawtooth function will oscillate between the min and max values
+#   period number: the length of a single sawtooth (in milliseconds)
+#
+
+generator sawtooth {
+  set t [expr double($time) / $sensor(period)]
+  #set dummy [expr ($t - floor($t)) * ($sensor(max) - $sensor(min)) + $sensor(min)]
+    # print the state, time and value
+  #  puts $sensor(activity),$t,$dummy; 
+  return [expr ($t - floor($t)) * ($sensor(max) - $sensor(min)) + $sensor(min)]
+}
+
+#
+# Since the configuration file is actually a Tcl script, we can use any Tcl commands,
+# e.g. "source" for including the "standard.sens" Tcl script containing the standard
+# generator definitions.
+#
+
+source standard.sens
